@@ -10,8 +10,8 @@ void fix_window() {
 void fix_screen() {
 	HANDLE fixcreen = GetStdHandle(STD_OUTPUT_HANDLE);
 	COORD size = { (SHORT)120, (SHORT)30 };
-	SMALL_RECT windowsize = { 0, 0, size.X - 1, size.Y - 1 };
 	SetConsoleScreenBufferSize(fixcreen, size);
+	SMALL_RECT windowsize = { 0, 0, (SHORT)(size.X - 1), (SHORT)(size.Y - 1) };
 	SetConsoleWindowInfo(fixcreen, TRUE, &windowsize);
 }
 
@@ -21,12 +21,12 @@ void gotoXY(int x, int y) {
 	SetConsoleCursorPosition(currentscreen, pos);
 }
 
-void setColor(int text, int bg) {
+void setcolor(int text, int bg) {
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(hStdOut, (WORD)((bg << 4) | text));
 }
 
-void showCursor(bool visible) {
+void showcursor(bool visible) {
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_CURSOR_INFO cursorInfo;
 	cursorInfo.dwSize = 10;
@@ -34,10 +34,10 @@ void showCursor(bool visible) {
 	SetConsoleCursorInfo(handle, &cursorInfo);
 }
 
-void winEffect(int winner) {
-	showCursor(false);
+void wineffect(int winner) {
+	showcursor(false);
 	for (int loop = 0; loop < 5; loop++) {
-		setColor(0, 14);
+		setcolor(0, 14);
 		for (auto cell : winCells) {
 			gotoXY(_a[cell.r][cell.c].x, _a[cell.r][cell.c].y);
 			cout << (winner == 1 ? "X" : "O");
@@ -46,16 +46,16 @@ void winEffect(int winner) {
 
 		for (auto cell : winCells) {
 			gotoXY(_a[cell.r][cell.c].x, _a[cell.r][cell.c].y);
-			setColor(winner == 1 ? 12 : 10, 0);
+			setcolor(winner == 1 ? 12 : 10, 0);
 			cout << (winner == 1 ? "X" : "O");
 		}
 		Sleep(160);
 	}
-	showCursor(true);
+	showcursor(true);
 }
 
 void drawboard(int psize) {
-	setColor(7);
+	setcolor(7);
 	for (int i = 0; i <= psize; i++) {
 		gotoXY(left, top + 2 * i);
 		for (int j = 0; j < psize; j++) {
@@ -73,22 +73,22 @@ void drawboard(int psize) {
 	gotoXY(_X, _Y);
 }
 
-void redrawBoardMarks() {
+void redrawchess() {
 	for (int i = 0; i < boardsize; i++) {
 		for (int j = 0; j < boardsize; j++) {
 			if (_a[i][j].c == 1) {
 				gotoXY(_a[i][j].x, _a[i][j].y);
-				setColor(12);
+				setcolor(12);
 				cout << "X";
 			}
 			else if (_a[i][j].c == -1) {
 				gotoXY(_a[i][j].x, _a[i][j].y);
-				setColor(10);
+				setcolor(10);
 				cout << "O";
 			}
 		}
 	}
-	setColor(7);
+	setcolor(7);
 }
 
 void drawmainscreen() {
@@ -104,6 +104,7 @@ void drawmainscreen() {
 }
 
 void mainscreen() {
+	showcursor(false);
 	const int startX = 53;
 	const int startY = 12;
 	const int step = 2;
@@ -125,10 +126,13 @@ void mainscreen() {
 		else if (move == 'S') {
 			option = (option == totaloption) ? 1 : option + 1;
 		}
-		else if (move == 13) {
+		else if (move == _keyenter) {
 			switch (option) {
-			case 1: newgamescreen(); break;
+			case 1: 
+				newgamescreen(); 
+				break;
 			case 2:
+				loadgamescreen();
 				break;
 			case 3:
 				settingscreen();
@@ -174,7 +178,7 @@ void newgamescreen() {
 		else if (move == 'S') {
 			option = (option == totaloption) ? 1 : option + 1;
 		}
-		else if (move == 13) {
+		else if (move == _keyenter) {
 			if (option == 1) PvP();
 			else PvBscreen();
 		}
@@ -192,12 +196,100 @@ void newgamescreen() {
 	}
 }
 
+void drawloadbox() {
+	const int boardX = 19;
+	const int boardY = 4;
+	const int boardwidth = 81;
+	const int boardheight = 21;
+
+	gotoXY(boardX, boardY);
+	cout << "+================================================================================+";
+	for (int i = 1;i < boardheight;i++) {
+		gotoXY(boardX, boardY + i);
+		cout << "|";
+		gotoXY(boardX + boardwidth, boardY + i);
+		cout << "|";
+	}
+	gotoXY(boardX, boardY + boardheight);
+	cout << "+================================================================================+";
+}
+
+void loadgamescreen() {
+	system("cls");
+	showcursor(false);
+	drawloadbox();
+
+	const int totaloption = 3;
+	int option = 0;
+
+	redrawslots(0);
+
+	while (1) {
+		int move = toupper(_getch());
+		int preoption = option;
+
+		if (move == 'W') {
+			option = (option == 0) ? totaloption - 1 : option - 1;
+		}
+		else if (move == 'S') {
+			option = (option == totaloption - 1) ? 0 : option + 1;
+		}
+		else if (move == 27 || move == _keyenter) { 
+			showcursor(true);
+			drawmainscreen();
+			mainscreen();
+			return;
+		}
+
+		if (option != preoption) {
+			redrawslots(option);
+		}
+	}
+}
+
+void drawslot (int slot, int startY, bool choosing) {
+	const int startX = 22;
+	if (choosing) {
+		setcolor(14);
+		gotoXY(startX, startY);
+		cout << "+==========================================================================+";
+		gotoXY(startX, startY + 1);
+		cout << "| > Slot " << (slot + 1) << "                                                                 |";
+		gotoXY(startX, startY + 2);
+		cout << "|                                                                          |";
+		gotoXY(startX, startY + 3);
+		cout << "|                                                                          |";
+		gotoXY(startX, startY + 4);
+		cout << "+==========================================================================+";
+	}
+	else {
+		gotoXY(startX, startY);
+		cout << "+--------------------------------------------------------------------------+";
+		gotoXY(startX, startY + 1);
+		cout << "|   Slot " << (slot + 1) << "                                                                 |";
+		gotoXY(startX, startY + 2);
+		cout << "|                                                                          |";
+		gotoXY(startX, startY + 3);
+		cout << "|                                                                          |";
+		gotoXY(startX, startY + 4);
+		cout << "+--------------------------------------------------------------------------+";
+	}
+	setcolor(7);
+}
+
+void redrawslots(int chosing) {
+	int startY[3] = { 6, 12, 18 };
+	for (int i = 0; i < 3; i++) {
+		drawslot(i, startY[i], (i==chosing));
+	}
+}
+
 int pausescreen() {
-	showCursor(false);
+	showcursor(false);
 	const int boxX = 47;
 	const int boxY = 11;
 
-	setColor(11);
+	setcolor(11);
 	gotoXY(boxX, boxY);     cout << "+--------------------------+";
 	gotoXY(boxX, boxY + 1); cout << "|        PAUSE GAME        |";
 	gotoXY(boxX, boxY + 2); cout << "+--------------------------+";
@@ -215,7 +307,7 @@ int pausescreen() {
 
 	int option = 1;
 	gotoXY(startX, startY);
-	setColor(14);
+	setcolor(14);
 	cout << ">";
 	gotoXY(startX, startY);
 
@@ -226,9 +318,9 @@ int pausescreen() {
 			option = (option == totaloption) ? 1 : option + 1;
 		else if (move == 'W')
 			option = (option == 1) ? totaloption : option - 1;
-		else if (move == 13) {
-			setColor(7);
-			showCursor(true);
+		else if (move == _keyenter) {
+			setcolor(7);
+			showcursor(true);
 			return option;
 		}
 
@@ -236,19 +328,19 @@ int pausescreen() {
 			gotoXY(startX, startY + (preoption - 1) * step);
 			cout << " ";
 			gotoXY(startX, startY + (option - 1) * step);
-			setColor(14);
+			setcolor(14);
 			cout << ">";
 			gotoXY(startX, startY + (option - 1) * step);
 		}
 	}
 }
 
-void exitConfirmScreen() {
-	showCursor(false);
+void exitconfirmscreen() {
+	showcursor(false);
 	const int boxX = 47;
 	const int boxY = 11;
 
-	setColor(11);
+	setcolor(11);
 	gotoXY(boxX, boxY);     cout << "+--------------------------+";
 	gotoXY(boxX, boxY + 1); cout << "|     BAN CO MUON LUU?     |";
 	gotoXY(boxX, boxY + 2); cout << "+--------------------------+";
@@ -266,7 +358,7 @@ void exitConfirmScreen() {
 
 	int option = 1;
 	gotoXY(startX, startY);
-	setColor(14);
+	setcolor(14);
 	cout << ">";
 	gotoXY(startX, startY);
 
@@ -277,38 +369,38 @@ void exitConfirmScreen() {
 			option = (option == totaloption) ? 1 : option + 1;
 		else if (move == 'W')
 			option = (option == 1) ? totaloption : option - 1;
-		else if (move == 13) {
+		else if (move == _keyenter) {
 			if (option == 1) { 
 				gotoXY(boxX, boxY + 3); cout << "|  Nhap ten file de luu:   |";
 				gotoXY(boxX, boxY + 4); cout << "|  [                      ]|";
 				gotoXY(boxX, boxY + 5); cout << "|                          |";
 				gotoXY(boxX, boxY + 6); cout << "|                          |";
 				gotoXY(boxX + 4, boxY + 4);
-				setColor(14);
-				showCursor(true);
+				setcolor(14);
+				showcursor(true);
 				string filename;
 				cin >> filename;
 
 				if (saveGameData(filename)) {
 					gotoXY(boxX, boxY + 6);
-					setColor(10);
+					setcolor(10);
 					cout << "|  Luu file thanh cong!    |";
 				} else {
 					gotoXY(boxX, boxY + 6);
-					setColor(12);
+					setcolor(12);
 					cout << "|  Loi khi luu file!       |";
 				}
 				Sleep(900);
 
-				setColor(7);
-				showCursor(true);
+				setcolor(7);
+				showcursor(true);
 				drawmainscreen();
 				mainscreen();
 				return;
 			}
 			else if (option == 2) {
-				setColor(7);
-				showCursor(true);
+				setcolor(7);
+				showcursor(true);
 				drawmainscreen();
 				mainscreen();
 				return;
@@ -319,7 +411,7 @@ void exitConfirmScreen() {
 			gotoXY(startX, startY + (preoption - 1) * step);
 			cout << " ";
 			gotoXY(startX, startY + (option - 1) * step);
-			setColor(14);
+			setcolor(14);
 			cout << ">";
 			gotoXY(startX, startY + (option - 1) * step);
 		}
@@ -355,7 +447,7 @@ void PvBscreen() {
 		else if (move == 'S') {
 			option = (option == totaloption) ? 1 : option + 1;
 		}
-		else if (move == 13) {
+		else if (move == _keyenter) {
 			if (option == 1) PvP();
 			else PvBscreen();
 		}
@@ -371,8 +463,8 @@ void PvBscreen() {
 	}
 }
 
-void drawsetting(int option, int startX, int y) {
-	gotoXY(startX, y);
+void drawsetting(int option, int startX, int startY) {
+	gotoXY(startX, startY);
 	switch (option) {
 	case 1:
 		cout << "Sound:        < " << (_sound ? "ON " : "OFF") << " >      ";
@@ -384,23 +476,24 @@ void drawsetting(int option, int startX, int y) {
 		cout << "Block 2 Ends: < " << (_block2ends ? "ON " : "OFF") << " >      ";
 		break;
 	case 4:
-		cout << "Move Up:      [ " << (char)_keyUp << " ]         ";
+		cout << "Move Up:      [ " << (char)_keyup << " ]         ";
 		break;
 	case 5:
-		cout << "Move Down:    [ " << (char)_keyDown << " ]         ";
+		cout << "Move Down:    [ " << (char)_keydown << " ]         ";
 		break;
 	case 6:
-		cout << "Move Left:    [ " << (char)_keyLeft << " ]         ";
+		cout << "Move Left:    [ " << (char)_keyleft << " ]         ";
 		break;
 	case 7:
-		cout << "Move Right:   [ " << (char)_keyRight << " ]         ";
+		cout << "Move Right:   [ " << (char)_keyright << " ]         ";
 		break;
 	}
-	gotoXY(startX - 2, y);
+	gotoXY(startX - 2, startY);
 }
 
 void settingscreen() {
 	system("cls");
+	showcursor(false);
 
 	const int startX = 46;
 	const int startY = 9;
@@ -410,8 +503,8 @@ void settingscreen() {
 	gotoXY(55, 7);
 	cout << "SETTINGS";
 
-	for (int i = 1; i <= totaloption; i++) {
-		drawsetting(i, startX + 2, startY + (i - 1) * step);
+	for (int i = 0; i < totaloption; i++) {
+		drawsetting(i+1, startX + 2, startY + i * step);
 	}
 
 	int option = 1;
@@ -429,7 +522,7 @@ void settingscreen() {
 		else if (move == 'S') {
 			option = (option == totaloption) ? 1 : option + 1;
 		}
-		else if (move == 13 && option >= 1 && option <= 3) {
+		else if (move == _keyenter && option >= 1 && option <= 3) {
 			while (1) {
 				int select = toupper(_getch());
 				if (select == 'A' || select == 'D') {
@@ -447,18 +540,23 @@ void settingscreen() {
 						drawsetting(3, startX + 2, startY + 2 * step);
 					}
 				}
-				if (select == 27 || select == 13)
+				if (select == 27 || select == _keyenter)
 					break;
 			}
 		}
-		if (move == 13 && option >= 4 && option <= 7) {
+		if (move == _keyenter && option >= 4 && option <= 7) {
+			gotoXY(startX + 18, startY + 2 * (option - 1));
+			cout << " ";
+			gotoXY(startX + 18, startY + 2 * (option - 1));
+			showcursor(true);
 
 			int newKey = toupper(_getch());
-			if (option == 4) _keyUp = newKey;
-			else if (option == 5) _keyDown = newKey;
-			else if (option == 6) _keyLeft = newKey;
-			else if (option == 7) _keyRight = newKey;
+			if (option == 4) _keyup = newKey; 
+			else if (option == 5) _keydown = newKey;
+			else if (option == 6) _keyleft = newKey;
+			else if (option == 7) _keyright = newKey;
 			drawsetting(option, startX + 2, startY + (option - 1) * step);
+			showcursor(false);
 		}
 		else if (move == 27) {
 			drawmainscreen();
@@ -481,25 +579,24 @@ int finish(int winner) {
 		_turn = !_turn;
 		return winner;
 	}
-	if (winner == 1 || winner == -1) {
-		winEffect(winner);
-	}
 	gotoXY(0, _a[boardsize - 1][boardsize - 1].y + 2);
 	switch (winner) {
 	case 1:
-		setColor(12);
+		setcolor(12);
 		cout << "Nguoi choi 1 da thang va nguoi choi 2 da thua";
+		wineffect(winner);
 		break;
 	case -1:
-		setColor(10);
+		setcolor(10);
 		cout << "Nguoi choi 2 da thang va nguoi choi 1 da thua";
+		wineffect(winner);
 		break;
 	case 0:
-		setColor(14);
+		setcolor(14);
 		cout << "Nguoi choi  2 da hoa nguoi choi 1";
 		break;
 	}
-	setColor(7);
+	setcolor(7);
 	return winner;
 }
 

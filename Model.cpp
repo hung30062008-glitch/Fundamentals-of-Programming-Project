@@ -6,9 +6,9 @@ int _X, _Y;
 _point _a[boardsize][boardsize];
 
 bool _sound = true;
-int _volume = 80;
+int _volume = 50;
 bool _block2ends = true;
-int _keyUp = 'W', _keyDown = 'S', _keyLeft = 'A', _keyRight = 'D', _keyEnter = 13;
+int _keyup = 'W', _keydown = 'S', _keyleft = 'A', _keyright = 'D', _keyenter = 13;
 
 vector<CellPos> winCells;
 
