@@ -1,4 +1,5 @@
 #pragma once
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
 #include <windows.h>
@@ -21,7 +22,7 @@ extern int _X, _Y;
 extern bool _sound;
 extern int _volume;
 extern bool _block2ends;
-extern int _keyUp, _keyDown, _keyLeft, _keyRight, _keyEnter;
+extern int _keyup, _keydown, _keyleft, _keyright, _keyenter;
 
 struct _point {
     int x, y, c;
@@ -36,11 +37,11 @@ extern vector<CellPos> winCells;
 
 void fix_window();
 void fix_screen();
-void setColor(int text, int bg = 0);
-void showCursor(bool visible);
-void winEffect(int winner);
+void setcolor(int, int bg = 0);
+void showcursor(bool);
+void wineffect(int );
 void settingscreen();
-void playSound(int freq, int duration);
+void playSound(int, int);
 int askcontinue();
 int finish(int);
 void gotoXY(int, int);
@@ -51,13 +52,15 @@ void moveto(int);
 int testboard();
 void resetdata();
 void drawboard(int);
-void redrawBoardMarks();
+void redrawchess();
 void drawmainscreen();
 void newgamescreen();
 void mainscreen();
-void PvP();
+void loadgamescreen();
+void PvP(bool = false);
 void PvBscreen();
 int pausescreen();
-void exitConfirmScreen();
+void exitconfirmscreen();
 bool saveGameData(const string& filename);
 bool loadGameData(const string& filename);
+void redrawslots(int);

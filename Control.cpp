@@ -39,22 +39,30 @@ void movedown() {
 }
 
 void moveto(int direction) {
-	if (direction == _keyLeft) {
+	if (direction == _keyleft) {
 		moveleft();
 	}
-	else if (direction == _keyDown) {
+	else if (direction == _keydown) {
 		movedown();
 	}
-	else if (direction == _keyRight) {
+	else if (direction == _keyright) {
 		moveright();
 	}
-	else if (direction == _keyUp) {
+	else if (direction == _keyup) {
 		moveup();
 	}
 }
 
-void PvP() {
-	startgame();
+void PvP(bool resume) {
+	if (!resume) {
+		startgame();
+	}
+	else {
+		system("cls");
+		drawboard(boardsize);
+		redrawchess();
+		gotoXY(_X, _Y);
+	}
 	bool validEnter = true;
 	while (1) {
 		int command = toupper(_getch());
@@ -63,23 +71,23 @@ void PvP() {
 			if (choice == 1) {
 				system("cls");
 				drawboard(boardsize);
-				redrawBoardMarks();
+				redrawchess();
 				gotoXY(_X, _Y);
 			}
 			else if (choice == 2) {
-				exitConfirmScreen();
+				exitconfirmscreen();
 				return;
 			}
 		}
-		else if (command == _keyEnter) {
+		else if (command == _keyenter) {
 			switch (checkboard(_X, _Y)) {
 			case 1:
-				setColor(12);
+				setcolor(12);
 				cout << "X";
 				gotoXY(_X, _Y);
 				break;
 			case -1:
-				setColor(10);
+				setcolor(10);
 				cout << "O";
 				gotoXY(_X, _Y);
 				break;
@@ -106,6 +114,7 @@ void PvP() {
 }
 int main() {
 	fix_window();
+	fix_screen();
 	drawmainscreen();
 	mainscreen();
 	return 0;
